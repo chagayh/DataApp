@@ -6,5 +6,8 @@ import retrofit2.http.Path
 
 interface ServerInterface {
     @GET("/users/{user_name}/token")
-    suspend fun getToken(@Path("userName") userNAme: String): Call<TokenResponse>
+    fun getToken(@Path("userName") userNAme: String): Call<TokenResponse>
+
+    @GET("/user/")
+    fun getUser(): Call<UserResponse>
 }
