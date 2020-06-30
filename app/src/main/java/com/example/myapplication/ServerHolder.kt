@@ -5,6 +5,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ServerHolder {
+    const val BASE_URL = "https://hujipostpc2019.pythonanywhere.com"
+
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .build()
@@ -13,12 +15,12 @@ object ServerHolder {
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .client(client)
-            .baseUrl("https://hujipostpc2019.pythonanywhere.com")
+            .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    private val serverInterface: ServerInterface by lazy {
+    val serverInterface: ServerInterface by lazy {
         retrofit.create(ServerInterface::class.java)
     }
 }

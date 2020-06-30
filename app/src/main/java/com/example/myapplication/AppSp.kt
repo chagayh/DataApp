@@ -4,39 +4,33 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class AppSp(context: Context) {
-    private var isFirstLogin: Boolean = true
     private var token: String? = null
+    private var userName: String? = null
     private var spFile: SharedPreferences
 
 
     companion object {
         private const val SP_LOCATION_FILE_NAME: String = "sp_location"
         private const val KEY_FIRST_LOGIN: String = "first_login"
+        private const val KEY_USER_NAME: String = "user_name"
     }
 
     init {
         spFile = context.getSharedPreferences(SP_LOCATION_FILE_NAME, Context.MODE_PRIVATE)
-        loadFirstLogin()
+        loadUserName()
     }
 
-    private fun loadFirstLogin(){
-        isFirstLogin = spFile.getBoolean(KEY_FIRST_LOGIN, true)
+    fun getUserName(): String?{
+        return userName
     }
 
-    fun getIsFirstLogin(): Boolean{
-        return isFirstLogin
+    private fun loadUserName(){
+        userName = spFile.getString(KEY_USER_NAME, null)
     }
 
-    fun setFirstLogin() {
-        this.isFirstLogin = false
-        storeFirstLogin()
-    }
-
-    private fun storeFirstLogin(){
+    fun storeUserName(str: String){
         val edit = spFile.edit()
-        edit.putBoolean(KEY_FIRST_LOGIN, isFirstLogin)
+        edit.putString(KEY_USER_NAME, str)
             .apply()
     }
-
-
 }
