@@ -4,14 +4,11 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
-import androidx.lifecycle.MutableLiveData
+import android.widget.*
 import androidx.lifecycle.Observer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -24,6 +21,8 @@ class MainActivity : AppCompatActivity() {
             get () = findViewById(R.id.enterBtn)
     private val textView: TextView
         get () = findViewById(R.id.textView)
+    private val userImage: ImageView
+        get () = findViewById(R.id.userImage)
     private var token: String? = null
     private var userInfo: User? = null
 
@@ -37,12 +36,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    @SuppressLint("SetTextI18n")
     private fun requestUserInfo(token: String){
         val id = appContext.requestUserInfo(token)
         val liveDataOfUserWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
         liveDataOfUserWorker.observe(this, Observer { value ->
             if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
-                Log.d("userInfo", "problems")
+                textView.text = "error occurred code = ${value.outputData.getInt("key_user_error", -1)}"
                 return@Observer
             } else {
                 val userAsJson = value.outputData.getString("key_user_info")
@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         val liveDataOfTokenWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
         liveDataOfTokenWorker.observe(this, Observer { value ->
             if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
+                textView.text = "error occurred code = ${value.outputData.getInt("key_user_error", -1)}"
                 return@Observer
             } else {
                 val token = value.outputData.getString("key_user_token")
@@ -79,11 +80,15 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun updateUI(){
         enterBtn.text = "CHANGE USER NAME"
-//        val msg = if (init) "welcome " else "welcome back "
         if (!userInfo?.pretty_name.isNullOrEmpty()){
             textView.text = "welcome ${userInfo?.pretty_name}"
         } else {
             textView.text = "welcome ${userInfo?.username}"
+        }
+        if (userInfo?.image_url != null){
+            Glide.with(this)
+                .load(ServerHolder.BASE_URL + userInfo?.image_url)
+                .into(userImage)
         }
     }
 
@@ -102,29 +107,34 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else -> {   // change the pretty name field
-                    requestPostName()
-                    appContext.appSp.storeUserName(editText.text.toString())
-                    enterBtn.text = "CHANGE USER NAME"
-                    textView.text = "Welcome " + editText.text.toString()
-                    editText.text.clear()
+                    if (editText.text.isEmpty()) {
+                        Toast.makeText(this, "Enter User Name", Toast.LENGTH_LONG)
+                            .show()
+                    } else {
+                        requestPostName(editText.text.toString())
+                        appContext.appSp.storeUserName(editText.text.toString())
+                        editText.text.clear()
+                    }
                 }
             }
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun requestPostName(prettyName: String){
         val id = appContext.requestPostPrettyName(prettyName, token)
-        val liveDataOfTokenWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
-        liveDataOfTokenWorker.observe(this, Observer { value ->
+        val liveDataOfPrettyWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
+        liveDataOfPrettyWorker.observe(this, Observer { value ->
             if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
+                textView.text = "error occurred code = ${value.outputData.getInt("key_user_error", -1)}"
                 return@Observer
             } else {
                 val userAsJson = value.outputData.getString("key_pretty_info")
+                Log.d("prettyName", "userAsJson = $userAsJson")
                 val userType = object : TypeToken<User>(){}.type
                 if (userAsJson != null){
                     val user = Gson().fromJson<User>(userAsJson, userType)
-                    userInfo.pretty_name = user.pretty_name
-                    Log.d("prettyName", "pretty name = ${userInfo!!.pretty_name}")
+                    userInfo?.pretty_name = user.pretty_name
                     updateUI()
                 }
             }

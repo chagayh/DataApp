@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.content.Context
+import android.util.Log
 import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -22,7 +23,9 @@ class PostPrettyNameWorker(context: Context, workerParams: WorkerParameters): Wo
             if (!response.isSuccessful) {
                 Result.failure(Data.Builder().putInt("key_request_error", response.code()).build())
             } else {
-                val userAsJson = Gson().toJson(response.body())
+                val user: User? = response.body()?.data
+                val userAsJson = Gson().toJson(user)
+                Log.d("prettyRequest", userAsJson)
                 val outPutData = Data.Builder()
                     .putString("key_pretty_info", userAsJson)
                     .build()

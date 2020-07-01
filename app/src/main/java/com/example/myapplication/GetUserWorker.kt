@@ -20,7 +20,7 @@ class GetUserWorker(context: Context, workerParams: WorkerParameters): Worker(co
             val response: Response<UserResponse> = serverInterface.getUser(header).execute()
             Log.d("token", "token = $token, response.isSuccessful = ${response.isSuccessful}")
             if (!response.isSuccessful) {
-                Result.retry()
+                Result.failure(Data.Builder().putInt("key_user_error", response.code()).build())
             } else {
                 val user: User? = response.body()?.data
                 val userAsJson = Gson().toJson(user)

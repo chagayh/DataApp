@@ -4,7 +4,7 @@ import retrofit2.Call
 import retrofit2.http.*
 
 data class SetUserPrettyNameRequest(
-    var prettyName: String?
+    var pretty_name: String?
 )
 
 interface ServerInterface {

@@ -21,7 +21,7 @@ class GetTokenWorker(context: Context, workerParams: WorkerParameters): Worker(c
             val response: Response<TokenResponse> = serverInterface.getToken(userName).execute()
             if (!response.isSuccessful) {
                 Log.d("tokenData", "not response.isSuccessful")
-                Result.retry()
+                Result.failure(Data.Builder().putInt("key_token_error", response.code()).build())
             } else {
                 val token: String? = response.body()?.data
                 val outputData: Data = Data.Builder()
