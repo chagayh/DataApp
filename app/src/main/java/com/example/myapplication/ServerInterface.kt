@@ -1,9 +1,11 @@
 package com.example.myapplication
 
 import retrofit2.Call
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.Path
+import retrofit2.http.*
+
+data class SetUserPrettyNameRequest(
+    var prettyName: String?
+)
 
 interface ServerInterface {
     @GET("/users/{user_name}/token/")
@@ -11,4 +13,9 @@ interface ServerInterface {
 
     @GET("/user/")
     fun getUser(@Header("Authorization") auth: String): Call<UserResponse>
+
+    @Headers("Content-Type: application/json")
+    @POST("/user/edit/")
+    fun setUserPrettyName(@Header("Authorization") auth: String,
+                          @Body request: SetUserPrettyNameRequest) : Call<UserResponse>
 }

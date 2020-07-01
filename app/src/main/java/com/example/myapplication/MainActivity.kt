@@ -24,32 +24,17 @@ class MainActivity : AppCompatActivity() {
             get () = findViewById(R.id.enterBtn)
     private val textView: TextView
         get () = findViewById(R.id.textView)
-    private val mutableLiveDataToken = MutableLiveData<String>()    // for the token
-    private val mutableLiveDataUser = MutableLiveData<String>()    // for the user
+    private var token: String? = null
+    private var userInfo: User? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        setObservers()
-
         checkFirstLogin()
 
         setButton()
 
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun setObservers(){
-        // token observer
-        mutableLiveDataToken.observe(this, Observer { value ->
-            if (value == null){
-                textView.text = "null token in live data"
-            } else {
-                textView.text = "token = $value"
-                appContext.appSp.storeToken(value)
-            }
-        })
     }
 
     private fun requestUserInfo(token: String){
@@ -64,7 +49,10 @@ class MainActivity : AppCompatActivity() {
                 val userType = object : TypeToken<User>(){}.type
                 if (userAsJson != null){
                     val user = Gson().fromJson<User>(userAsJson, userType)
-                    Log.d("userInfo", "user name = ${user.username}")
+                    userInfo = User(user.username, user.pretty_name, user.image_url)
+                    updateUI()
+                    Log.d("userInfo", "user name = ${userInfo!!.pretty_name}")
+                    Log.d("userInfo", "pretty name empty = ${userInfo!!.pretty_name.isNullOrEmpty()}")
                 }
             }
         })
@@ -89,6 +77,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
+    private fun updateUI(){
+        enterBtn.text = "CHANGE USER NAME"
+//        val msg = if (init) "welcome " else "welcome back "
+        if (!userInfo?.pretty_name.isNullOrEmpty()){
+            textView.text = "welcome ${userInfo?.pretty_name}"
+        } else {
+            textView.text = "welcome ${userInfo?.username}"
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun setButton(){
         enterBtn.setOnClickListener {
             when (enterBtn.text){
@@ -97,11 +96,13 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this, "Enter User Name", Toast.LENGTH_LONG)
                             .show()
                     } else {
+                        textView.text = "loading ..."
                         requestToken(editText.text.toString())
                         editText.text.clear()
                     }
                 }
-                else -> {
+                else -> {   // change the pretty name field
+                    requestPostName()
                     appContext.appSp.storeUserName(editText.text.toString())
                     enterBtn.text = "CHANGE USER NAME"
                     textView.text = "Welcome " + editText.text.toString()
@@ -111,14 +112,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestPostName(prettyName: String){
+        val id = appContext.requestPostPrettyName(prettyName, token)
+        val liveDataOfTokenWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
+        liveDataOfTokenWorker.observe(this, Observer { value ->
+            if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
+                return@Observer
+            } else {
+                val userAsJson = value.outputData.getString("key_pretty_info")
+                val userType = object : TypeToken<User>(){}.type
+                if (userAsJson != null){
+                    val user = Gson().fromJson<User>(userAsJson, userType)
+                    userInfo.pretty_name = user.pretty_name
+                    Log.d("prettyName", "pretty name = ${userInfo!!.pretty_name}")
+                    updateUI()
+                }
+            }
+        })
+    }
+
     @SuppressLint("SetTextI18n")
     private fun checkFirstLogin(){
-        if (appContext.appSp.getUserToken() == null){
+        token = appContext.appSp.getUserToken()
+        if (token == null){
             enterBtn.text = "ENTER"
             textView.text = "Enter User Name First"
         } else {
-            textView.text = "Welcome " + appContext.appSp.getUserName()
-            enterBtn.text = "CHANGE USER NAME"
+            textView.text = "loading ..."
+            requestUserInfo(token!!)
+            enterBtn.text = "change your pretty name"
         }
     }
 }

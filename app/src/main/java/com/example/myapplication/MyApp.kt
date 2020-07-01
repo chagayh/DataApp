@@ -33,4 +33,17 @@ class MyApp: Application() {
         WorkManager.getInstance().enqueue(userWork)
         return userWork.id
     }
+
+    fun requestPostPrettyName(name: String, token: String?): UUID {
+        val userWorkTagUniqueId: UUID = UUID.randomUUID()
+
+        val nameWork = OneTimeWorkRequest.Builder(PostPrettyNameWorker::class.java)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setInputData(Data.Builder().putString("key_user_token", token).putString("key_pretty_name", name).build())
+            .addTag(userWorkTagUniqueId.toString())
+            .build()
+
+        WorkManager.getInstance().enqueue(nameWork)
+        return nameWork.id
+    }
 }
