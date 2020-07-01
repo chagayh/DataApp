@@ -23,10 +23,9 @@ class GetTokenWorker(context: Context, workerParams: WorkerParameters): Worker(c
                 Log.d("tokenData", "not response.isSuccessful")
                 Result.retry()
             } else {
-                val token: TokenResponse? = response.body()
-                val tokenAsJson = Gson().toJson(token)
+                val token: String? = response.body()?.data
                 val outputData: Data = Data.Builder()
-                    .putString("key_user_token", tokenAsJson)
+                    .putString("key_user_token", token)
                     .build()
 
                 Result.success(outputData)

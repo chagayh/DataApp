@@ -20,4 +20,17 @@ class MyApp: Application() {
         WorkManager.getInstance().enqueue(tokenWork)
         return tokenWork.id
     }
+
+    fun requestUserInfo(token: String): UUID{
+        val userWorkTagUniqueId: UUID = UUID.randomUUID()
+
+        val userWork = OneTimeWorkRequest.Builder(GetUserWorker::class.java)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setInputData(Data.Builder().putString("key_user_token", token).build())
+            .addTag(userWorkTagUniqueId.toString())
+            .build()
+
+        WorkManager.getInstance().enqueue(userWork)
+        return userWork.id
+    }
 }

@@ -1,21 +1,19 @@
 package com.example.myapplication
 
 import android.annotation.SuppressLint
-import android.media.session.MediaSession
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.WorkSource
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class MainActivity : AppCompatActivity() {
     private val appContext: MyApp
@@ -54,6 +52,25 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun requestUserInfo(token: String){
+        val id = appContext.requestUserInfo(token)
+        val liveDataOfUserWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
+        liveDataOfUserWorker.observe(this, Observer { value ->
+            if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
+                Log.d("userInfo", "problems")
+                return@Observer
+            } else {
+                val userAsJson = value.outputData.getString("key_user_info")
+                val userType = object : TypeToken<User>(){}.type
+                if (userAsJson != null){
+                    val user = Gson().fromJson<User>(userAsJson, userType)
+                    Log.d("userInfo", "user name = ${user.username}")
+                }
+            }
+        })
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun requestToken(userName: String){
         val id = appContext.requestToken(userName)
         val liveDataOfTokenWorker = WorkManager.getInstance().getWorkInfoByIdLiveData(id)
@@ -61,12 +78,15 @@ class MainActivity : AppCompatActivity() {
             if (value == null || value.state != WorkInfo.State.SUCCEEDED) {
                 return@Observer
             } else {
-                value.outputData.getString("key_user_token")?.let { appContext.appSp.storeToken(it) }
+                val token = value.outputData.getString("key_user_token")
+                if (token != null){
+                    appContext.appSp.storeToken(token)
+                    Log.d("tokenData", "$token")
+                    requestUserInfo(token)
+                }
             }
-            Log.d("tokenData", "${value.outputData.getString("key_user_token")}")
         })
     }
-
 
     @SuppressLint("SetTextI18n")
     private fun setButton(){
