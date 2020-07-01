@@ -7,6 +7,7 @@ import java.util.*
 class MyApp: Application() {
     val appSp: AppSp
         get() = AppSp(this)
+    val viewModel: MyViewModel = MyViewModel()
 
     fun requestToken(userName: String): UUID{
         val tokenWorkTagUniqueId: UUID = UUID.randomUUID()

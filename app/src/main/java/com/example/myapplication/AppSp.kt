@@ -47,5 +47,6 @@ class AppSp(context: Context) {
         val edit = spFile.edit()
         edit.putString(KEY_TOKEN, str)
             .apply()
+        token = str
     }
 }
