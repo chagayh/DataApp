@@ -146,7 +146,6 @@ class InputFragment: Fragment() {
                     } else {
                         Log.d("setButton", "in else")
                         requestPostName(editText.text.toString())
-                        appContext.appSp.storeUserName(editText.text.toString())
                         editText.text.clear()
                     }
                 }

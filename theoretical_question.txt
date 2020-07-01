@@ -1,0 +1,4 @@
+When saving locally we won't need to access the server every time we launch the app, hence faster.
+However with method, every time we would like to change the token of the user we would need to explitly 
+log out, hence less flexible.
+When saving on the server we won't have that problem however it will be slower.

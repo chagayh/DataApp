@@ -21,10 +21,6 @@ class AppSp(context: Context) {
         loadToken()
     }
 
-    fun getUserName(): String?{
-        return userName
-    }
-
     fun getUserToken(): String? {
         return token
     }
@@ -35,12 +31,6 @@ class AppSp(context: Context) {
 
     private fun loadToken(){
         token = spFile.getString(KEY_TOKEN, null)
-    }
-
-    fun storeUserName(str: String){
-        val edit = spFile.edit()
-        edit.putString(KEY_USER_NAME, str)
-            .apply()
     }
 
     fun storeToken(str: String){
